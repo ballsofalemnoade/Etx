@@ -358,39 +358,42 @@ async def pfps(interaction: discord.Interaction):
     embed = discord.Embed(title="👀 Random PFP", color=discord.Color.from_rgb(220, 20, 60))
     embed.set_image(url=random.choice(PFPS))
     await interaction.response.send_message(embed=embed)
-
-
 # =========================================================
 # GHOSTPING
 # =========================================================
 
 @bot.tree.command(name="ghostping", description="Ghost ping a user")
-@app_commands.describe(user="User to ghost ping", times="How many times (1-20)", message="Optional extra text")
+@app_commands.describe(user="User to ghost ping", times="How many times (1-10)", message="Optional extra text")
 @dmsafe
 async def ghostping(interaction: discord.Interaction, user: discord.User, times: int = 1, message: str = ""):
-    times = max(1, min(20, times))
-    await interaction.response.send_message(f"👻 Ghost pinging {user.display_name} x{times}...", ephemeral=True)
+    times = max(1, min(10, times))
+
+    await interaction.response.send_message(
+        f"👻 Ghost pinging {user.display_name} x{times}...", ephemeral=True
+    )
 
     content = f"{user.mention} {message}".strip() or user.mention
     sent = 0
+
     for _ in range(times):
         try:
             msg = await interaction.channel.send(content)
+            # Give Discord ~1.2s to fire the ping notification before deleting
+            await asyncio.sleep(1.2)
             try:
                 await msg.delete()
             except Exception:
                 pass
             sent += 1
-        except Exception:
+        except Exception as e:
+            print(f"[ghostping] failed: {e}")
             break
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.3)
 
     try:
         await interaction.edit_original_response(content=f"✅ Ghost ping done: {sent}/{times}")
     except Exception:
         pass
-
-
 # =========================================================
 # FAKE NITRO
 # =========================================================
